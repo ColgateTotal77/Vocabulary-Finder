@@ -1,2 +1,3 @@
-const browserAPI = (typeof browser === "undefined") ? chrome : browser;
-
+chrome.runtime.onInstalled.addListener(() => {
+    console.log('Vocabulary Finder extension installed');
+});

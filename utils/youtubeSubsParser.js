@@ -1,13 +1,15 @@
-import { wordParser } from './wordParser';
+import { wordParser } from './wordParser.js';
 
 export function YoutubeSubsParser(callback) {
     const observer = new MutationObserver(function (mutations) {
         mutations.forEach(mutation => {
             mutation.addedNodes.forEach(node => {
                 const text = node.textContent;
-                const words = wordParser(text);
-                console.log(words);
-                callback(words);
+                if (text) {
+                    const words = wordParser(text);
+                    console.log(text);
+                    callback(words);
+                }
             });
         });
     });
@@ -19,15 +21,13 @@ export function YoutubeSubsParser(callback) {
         if (ytp_caption_window_container  && ytp_caption_window_container  !== observedElement) {
             if (observedElement) {
                 observer.disconnect();
-                console.log('Disconnected from old captions-text.');
             }
             observedElement = ytp_caption_window_container;
 
-            observer.observe(observedElement , {
+            observer.observe(observedElement, {
                 childList: true,
                 subtree: true
             });
-            console.log('Observer connected to new captions-text.');
         }
 
         setTimeout(tryObserveCaptions, 1000);

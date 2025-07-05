@@ -17,4 +17,3 @@ export function lemmatize(word) {
 
     return lowerWord;
 }
-

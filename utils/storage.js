@@ -1,6 +1,6 @@
 import { openDB } from 'idb';
 
-export  function dbPromise() {
+export function dbPromise() {
     return openDB('vocab-db', 1, {
         upgrade(db) {
             db.createObjectStore('words', { keyPath: 'word' });
@@ -12,11 +12,10 @@ export async function addOrUpdateWord(wordEntry) {
     const db = await dbPromise();
     const existingWord = await db.get('words', wordEntry.word);
 
-    if(existingWord) {
+    if (existingWord) {
         existingWord.count++;
         await db.put('words', existingWord);
-    }
-    else {
+    } else {
         await db.add('words', {
             word: wordEntry.word,
             count: 1,

@@ -1,0 +1,14 @@
+body {
+    height: 300px;
+    width: 200px;
+}
+
+#list, h2 {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#list {
+    font-size: 8px;
+}

@@ -1,5 +1,5 @@
 {
-  "manifest_version": 2,
+  "manifest_version": 3,
   "name": "Vocabulary Finder",
   "version": "1.0",
   "description": "Find and save new words from YouTube and websites.",
@@ -15,22 +15,22 @@
     "http://*/*"
   ],
   "background": {
-    "scripts": ["background.js"],
-    "persistent": false
+    "service_worker": "background.js"
   },
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["content.js"],
-      "run_at": "document_idle"
+      "js": ["dist/bundle.js"]
     }
   ],
-  "browser_action": {
-    "default_popup": "popup/popup.html",
+  "action": {
+    "default_popup": "popup.html",
     "default_icon": "icons/icon48.png"
   },
-  "options_ui": {
-    "page": "options/options.html",
-    "open_in_tab": true
-  }
+  "web_accessible_resources": [
+    {
+      "resources": ["utils/*.js"],
+      "matches": ["<all_urls>"]
+    }
+  ]
 }
