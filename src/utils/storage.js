@@ -11,7 +11,7 @@ export function dbPromise() {
 export async function addOrUpdateWord(wordEntry) {
     const db = await dbPromise();
     const existingWord = await db.get('words', wordEntry.word);
-
+    console.log(wordEntry.word, " : : : ", existingWord);
     if (existingWord) {
         existingWord.count++;
         await db.put('words', existingWord);

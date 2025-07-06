@@ -1,14 +1,14 @@
-import { addOrUpdateWord } from './utils/storage.js';
 import { YoutubeSubsParser } from './utils/youtubeSubsParser.js';
 import { parseWebsite } from './utils/parseWebsite.js';
-import { lemmatize } from './utils/lemmatize.js';
+
+const browserAPI = (typeof browser === "undefined") ? chrome : browser;
 
 function updateWordCounts(words) {
-    const source = window.location.href;
-    words.forEach(async rawWord => {
-        const word = lemmatize(rawWord);
-        if (word && word.length > 2) {
-            await addOrUpdateWord({word, source});
+    browserAPI.runtime.sendMessage({
+        type: 'addOrUpdateWords',
+        data: {
+            words: words,
+            source: window.location.href
         }
     });
 }

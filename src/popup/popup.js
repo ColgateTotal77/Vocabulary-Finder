@@ -1,4 +1,4 @@
-import { getAllWords } from '../utils/storage.js';
+import { getAllWords } from '../../src/utils/storage.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     const list = document.getElementById('list');
