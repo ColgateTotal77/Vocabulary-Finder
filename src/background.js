@@ -1,10 +1,39 @@
 import { lemmatize } from "./utils/lemmatize";
-import { addOrUpdateWord, getAllWords } from "./utils/storage";
+import {addOrUpdateWord, getAllWords, isAlreadyProcessed, markAsProcessed} from "./utils/storage";
 
 const browserAPI = (typeof browser === 'undefined') ? chrome : browser;
 
 browserAPI.runtime.onMessage.addListener((msg, sender, sendResponse) => {
-    if (msg.type === 'addOrUpdateWords') {
+
+    if (msg.type === 'isAlreadyProcessed') {
+        (async () => {
+            try {
+                const processed = await isAlreadyProcessed(msg.data.url);
+                sendResponse({ processed });
+            }
+            catch (err) {
+                console.error(err);
+                sendResponse({ processed: false });
+            }
+        })();
+
+        return true;
+    }
+
+    else if (msg.type === 'markAsProcessed') {
+        (async () => {
+            try {
+                await markAsProcessed(msg.data.url);
+            }
+            catch (err) {
+                console.error(err);
+            }
+        })();
+
+        return true;
+    }
+
+    else if (msg.type === 'addOrUpdateWords') {
         const source = msg.data.source;
 
         (async () => {
@@ -30,10 +59,10 @@ browserAPI.runtime.onMessage.addListener((msg, sender, sendResponse) => {
             try {
                 const words = await getAllWords();
                 console.log('[DB] Got words', words);
-                sendResponse(words);
+                sendResponse({ words });
             } catch (err) {
                 console.error('[DB] Failed to get words', err);
-                sendResponse([]);
+                sendResponse({ words: [] });
             }
         })();
 

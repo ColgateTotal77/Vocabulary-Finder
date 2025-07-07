@@ -6,10 +6,21 @@ export function dbPromise() {
         dbPromiseInstance = openDB('vocab-db', 1, {
             upgrade(db) {
                 db.createObjectStore('words', { keyPath: 'word' });
+                db.createObjectStore('processed', { keyPath: 'url' });
             }
         });
     }
     return dbPromiseInstance;
+}
+
+export async function isAlreadyProcessed(url) {
+    const db = await dbPromise();
+    return !!(await db.get("processed", url));
+}
+
+export async function markAsProcessed(url) {
+    const db = await dbPromise();
+    await db.put('processed', { url, processed: true, timestamp: Date.now() });
 }
 
 export async function addOrUpdateWord(wordEntry) {

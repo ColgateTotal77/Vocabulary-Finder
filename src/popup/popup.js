@@ -14,7 +14,8 @@ function sendMessageAsync(message) {
 
 const list = document.getElementById('list');
 try {
-    const words = await sendMessageAsync({ type: 'getAllWords' });
+    const response = await sendMessageAsync({ type: 'getAllWords' });
+    const words = response.words;
 
     if (!words || words.length === 0) {
         list.innerHTML = '<div class="word-div">No words yet</div>';
@@ -38,7 +39,9 @@ try {
         urlLink.href = word.first_source;
         urlLink.target = '_blank';
         urlLink.title = word.first_source;
-        urlLink.textContent = word.first_source.replace(/^https?:\/\//, '').slice(0, 20) + word.first_source.length > 40 ? '…' : '';
+
+        const cleanUrl = word.first_source.replace(/^https?:\/\//, '');
+        urlLink.textContent = cleanUrl.length > 40 ? cleanUrl.slice(0, 40) + '…' : cleanUrl;
 
         meta.appendChild(urlLink);
 
