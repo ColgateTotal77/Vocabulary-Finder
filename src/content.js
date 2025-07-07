@@ -4,6 +4,7 @@ import { parseWebsite } from './utils/parseWebsite.js';
 const browserAPI = (typeof browser === "undefined") ? chrome : browser;
 
 function updateWordCounts(words) {
+    console.log("callback")
     browserAPI.runtime.sendMessage({
         type: 'addOrUpdateWords',
         data: {
@@ -19,6 +20,10 @@ function isYouTubeVideo() {
         window.location.pathname === '/watch'
     );
 }
-
-if (isYouTubeVideo()) YoutubeSubsParser(updateWordCounts);
-else parseWebsite(updateWordCounts);
+try {
+    if (isYouTubeVideo()) YoutubeSubsParser(updateWordCounts);
+    else parseWebsite(updateWordCounts);
+}
+catch (err) {
+    console.error(err);
+}
