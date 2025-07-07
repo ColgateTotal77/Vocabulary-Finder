@@ -1,11 +1,15 @@
 import { openDB } from 'idb';
 
+let dbPromiseInstance = null;
 export function dbPromise() {
-    return openDB('vocab-db', 1, {
-        upgrade(db) {
-            db.createObjectStore('words', { keyPath: 'word' });
-        }
-    });
+    if (!dbPromiseInstance) {
+        dbPromiseInstance = openDB('vocab-db', 1, {
+            upgrade(db) {
+                db.createObjectStore('words', { keyPath: 'word' });
+            }
+        });
+    }
+    return dbPromiseInstance;
 }
 
 export async function addOrUpdateWord(wordEntry) {

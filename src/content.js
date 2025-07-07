@@ -20,7 +20,9 @@ function isYouTubeVideo() {
         window.location.pathname === '/watch'
     );
 }
+
 try {
+
     if (isYouTubeVideo()) YoutubeSubsParser(updateWordCounts);
     else parseWebsite(updateWordCounts);
 }
