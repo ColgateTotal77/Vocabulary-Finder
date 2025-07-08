@@ -2,7 +2,8 @@ import { Readability } from '@mozilla/readability';
 import { wordParser } from './wordParser.js';
 
 export function parseWebsite(callback) {
-    const article = new Readability(document).parse();
+    const docClone = document.cloneNode(true); // deep clone
+    const article = new Readability(docClone).parse();
     console.log(article);
     if (article?.textContent) {
         const words = wordParser(article.textContent);

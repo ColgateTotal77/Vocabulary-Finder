@@ -6,14 +6,79 @@ body {
     color: #333;
 }
 
-h2 {
-    margin-top: 0;
-    font-size: 18px;
+#header {
     border-bottom: 1px solid #ddd;
     padding-bottom: 5px;
+    display: flex;
+    justify-content: space-between;
 }
 
-#list {
+#header span {
+    font-size: 18px;
+    font-weight: 900;
+    margin-top: 0;
+}
+
+.dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+#more, #back{
+    background: none;
+    border: none;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    color: #333;
+    border-radius: 4px;
+}
+
+#back {
+    padding: 2px 0;
+    margin-right: 8px;
+    height: 22px;
+}
+
+#more {
+    padding: 2px 8px;
+    height: 20px;
+}
+
+#more:hover, #back:hover {
+    background-color: #eee;
+}
+
+#dropdown-menu {
+    position: absolute;
+    top: 120%;
+    right: 0;
+    background-color: white;
+    border: 1px solid #ddd;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    display: none;
+    flex-direction: column;
+    z-index: 1000;
+    min-width: 140px;
+    border-radius: 4px;
+}
+
+.dropdown-item {
+    padding: 8px 12px;
+    text-align: left;
+    background: none;
+    border: none;
+    width: 100%;
+    cursor: pointer;
+    font-size: 14px;
+    color: #333;
+}
+
+.dropdown-item:hover {
+    background-color: #f0f0f0;
+}
+
+.list {
     max-height: 300px;
     overflow-y: auto;
     padding-right: 6px;
@@ -56,4 +121,12 @@ ul {
 
 .url:hover {
     text-decoration: underline;
+}
+
+.state-view {
+    display: none;
+}
+
+.state-view.active {
+    display: block;
 }

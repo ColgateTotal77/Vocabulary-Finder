@@ -1,4 +1,4 @@
-import wink_lemmatizer from 'wink-lemmatizer';
+import { adjective, verb, noun } from 'wink-lemmatizer';
 import exceptions from './exceptions.json';
 
 export function lemmatize(word) {
@@ -6,13 +6,13 @@ export function lemmatize(word) {
 
     if (exceptions[word]) return exceptions[word];
 
-    const nounResult = wink_lemmatizer.noun(lowerWord);
+    const nounResult = noun(lowerWord);
     if (nounResult !== lowerWord) return nounResult;
 
-    const verbResult = wink_lemmatizer.verb(lowerWord);
+    const verbResult = verb(lowerWord);
     if (verbResult !== lowerWord) return verbResult;
 
-    const adjResult = wink_lemmatizer.adjective(lowerWord);
+    const adjResult = adjective(lowerWord);
     if (adjResult !== lowerWord) return adjResult;
 
     return lowerWord;

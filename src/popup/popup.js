@@ -1,5 +1,13 @@
 const browserAPI = (typeof browser === 'undefined') ? chrome : browser;
 
+let curState = 'word-list';
+const tabName = document.getElementById('tab-name');
+function switchState(newState) {
+    document.getElementById(curState).classList.remove('active')
+    curState = newState;
+    document.getElementById(curState).classList.add('active');
+}
+
 function sendMessageAsync(message) {
     return new Promise((resolve, reject) => {
         browserAPI.runtime.sendMessage(message, (response) => {
@@ -12,14 +20,16 @@ function sendMessageAsync(message) {
     });
 }
 
-const list = document.getElementById('list');
+const wordListContainer = document.getElementById('word-list-container');
+
 try {
     const response = await sendMessageAsync({ type: 'getAllWords' });
     const words = response.words;
 
     if (!words || words.length === 0) {
-        list.innerHTML = '<div class="word-div">No words yet</div>';
+        wordListContainer.innerHTML = '<div class="word-div">No words yet</div>';
     }
+    else wordListContainer.innerHTML = '';
 
     words.sort((a, b) => b.count - a.count);
 
@@ -47,9 +57,57 @@ try {
 
         wordDiv.appendChild(wordSpan);
         wordDiv.appendChild(meta);
-        list.appendChild(wordDiv);
+        wordListContainer.appendChild(wordDiv);
     }
 } catch (err) {
     console.error('Error loading words:', err);
-    list.innerHTML = '<li>Failed to load words</li>';
+    wordListContainer.innerHTML = '<li>Failed to load words</li>';
 }
+
+const moreBtn = document.getElementById('more');
+const dropdown = document.getElementById('dropdown-menu');
+
+const backBtn = document.getElementById('back');
+
+backBtn.addEventListener('click', () => {
+    switchState('word-list');
+    backBtn.classList.remove('active');
+    tabName.textContent = "Saved words";
+})
+
+document.addEventListener('click', (e) => {
+    if (moreBtn.contains(e.target)) {
+        dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+    } else {
+        dropdown.style.display = 'none';
+    }
+});
+
+document.getElementById('add-exceptions').addEventListener('click', () => {
+    switchState('add-exception-list');
+    backBtn.classList.add('active');
+    tabName.textContent = "Saved words";
+});
+
+document.getElementById('add-exception-manually').addEventListener('click', () => {
+    switchState('add-exception-manually-window');
+    backBtn.classList.add('active');
+    tabName.textContent = "Add exception manually";
+});
+
+document.getElementById('list-of-exceptions').addEventListener('click', () => {
+    switchState('exception-list');
+    backBtn.classList.add('active');
+    tabName.textContent = "Exceptions";
+});
+
+document.getElementById('clear-words').addEventListener('click', () => {
+    if (confirm("Are you sure you want to clear all words?")) {
+    }
+});
+
+document.getElementById('export-words').addEventListener('click', () => {
+    switchState('export-words-window');
+    backBtn.classList.add('active');
+    tabName.textContent = "Export";
+});

@@ -1,5 +1,5 @@
-import { lemmatize } from "./utils/lemmatize";
-import {addOrUpdateWord, getAllWords, isAlreadyProcessed, markAsProcessed} from "./utils/storage";
+import { addOrUpdateWord, getAllWords, isAlreadyProcessed, markAsProcessed } from "./utils/storage";
+// import { lemmatize } from "./utils/lemmatize";
 
 const browserAPI = (typeof browser === 'undefined') ? chrome : browser;
 
@@ -30,7 +30,7 @@ browserAPI.runtime.onMessage.addListener((msg, sender, sendResponse) => {
             }
         })();
 
-        return true;
+        return false;
     }
 
     else if (msg.type === 'addOrUpdateWords') {
@@ -38,7 +38,7 @@ browserAPI.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 
         (async () => {
             for (const rawWord of msg.data.words) {
-                const word = lemmatize(rawWord);
+                const word = rawWord;
                 if (word && word.length > 2) {
                     try {
                         await addOrUpdateWord({ word, source });
@@ -51,7 +51,7 @@ browserAPI.runtime.onMessage.addListener((msg, sender, sendResponse) => {
             sendResponse({ success: true });
         })();
 
-        return true;
+        return false;
     }
 
     else if (msg.type === 'getAllWords') {
