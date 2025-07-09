@@ -2,6 +2,7 @@ body {
     font-family: Arial, sans-serif;
     padding: 10px;
     width: 300px;
+    height: 340px;
     background: #f9f9f9;
     color: #333;
 }
@@ -104,19 +105,27 @@ ul {
     font-weight: bold;
 }
 
-.meta {
-    font-size: 12px;
-    color: #555;
+.word-block {
     display: flex;
     justify-content: space-between;
 }
 
+.word-checkbox {
+    transform: scale(1.2);
+    cursor: pointer;
+}
+
+.meta {
+    font-size: 12px;
+    color: #555;
+}
+
 .url {
     color: #0066cc;
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    max-width: 100%;
+    /*overflow: hidden;*/
+    /*white-space: nowrap;*/
+    /*text-overflow: ellipsis;*/
+    /*max-width: 100%;*/
 }
 
 .url:hover {

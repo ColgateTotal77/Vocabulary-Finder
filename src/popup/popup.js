@@ -20,16 +20,8 @@ function sendMessageAsync(message) {
     });
 }
 
-const wordListContainer = document.getElementById('word-list-container');
-
-try {
-    const response = await sendMessageAsync({ type: 'getAllWords' });
-    const words = response.words;
-
-    if (!words || words.length === 0) {
-        wordListContainer.innerHTML = '<div class="word-div">No words yet</div>';
-    }
-    else wordListContainer.innerHTML = '';
+function renderWords(words, list, showCheckboxes = false) {
+    list.innerHTML = '';
 
     words.sort((a, b) => b.count - a.count);
 
@@ -40,6 +32,18 @@ try {
         const wordSpan = document.createElement('span');
         wordSpan.className = 'word';
         wordSpan.textContent = `${word.word} (${word.count})`;
+
+        const wordBlock = document.createElement('div');
+        wordBlock.className = 'word-block';
+        wordBlock.appendChild(wordSpan);
+
+        if (showCheckboxes) {
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.className = 'word-checkbox';
+            checkbox.value = word.word;
+            wordBlock.appendChild(checkbox);
+        }
 
         const meta = document.createElement('div');
         meta.className = 'meta';
@@ -55,13 +59,22 @@ try {
 
         meta.appendChild(urlLink);
 
-        wordDiv.appendChild(wordSpan);
+        wordDiv.appendChild(wordBlock);
         wordDiv.appendChild(meta);
-        wordListContainer.appendChild(wordDiv);
+        list.appendChild(wordDiv);
     }
+}
+
+const wordListContainer = document.getElementById('word-list-container');
+try {
+    const response = await sendMessageAsync({ type: 'getAllWords' });
+    const words = response.words;
+
+    if (!words || words.length === 0) wordListContainer.innerHTML = '<div class="word-div">No words yet</div>';
+    else renderWords(words, wordListContainer);
 } catch (err) {
     console.error('Error loading words:', err);
-    wordListContainer.innerHTML = '<li>Failed to load words</li>';
+    wordListContainer.innerHTML = '<div>Failed to load words</div>';
 }
 
 const moreBtn = document.getElementById('more');
@@ -83,9 +96,21 @@ document.addEventListener('click', (e) => {
     }
 });
 
-document.getElementById('add-exceptions').addEventListener('click', () => {
+document.getElementById('add-exceptions').addEventListener('click', async () => {
     switchState('add-exception-list');
     backBtn.classList.add('active');
+    const addExceptionListContainer = document.getElementById('add-exception-list-container')
+    try {
+        const response = await sendMessageAsync({ type: 'getAllWords' });
+        const words = response.words;
+
+        if (!words || words.length === 0) addExceptionListContainer.innerHTML = '<div class="word-div">No words yet</div>';
+        else renderWords(words, addExceptionListContainer, true);
+    } catch (err) {
+        console.error('Error loading words:', err);
+        addExceptionListContainer.innerHTML = '<div>Failed to load words</div>';
+    }
+
     tabName.textContent = "Saved words";
 });
 
@@ -95,9 +120,21 @@ document.getElementById('add-exception-manually').addEventListener('click', () =
     tabName.textContent = "Add exception manually";
 });
 
-document.getElementById('list-of-exceptions').addEventListener('click', () => {
+document.getElementById('list-of-exceptions').addEventListener('click', async () => {
     switchState('exception-list');
     backBtn.classList.add('active');
+    const exceptionList = document.getElementById('exception-list')
+
+    try {
+        const response = await sendMessageAsync({ type: 'getAllExceptions' });
+        const words = response.exceptions;
+
+        if (!words || words.length === 0) exceptionList.innerHTML = '<div class="word-div">No exceptions yet</div>';
+        else renderWords(words, exceptionList, true);
+    } catch (err) {
+        console.error('Error loading words:', err);
+        exceptionList.innerHTML = '<div>Failed to load words</div>';
+    }
     tabName.textContent = "Exceptions";
 });
 

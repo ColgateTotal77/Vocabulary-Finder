@@ -7,7 +7,8 @@ export function dbPromise() {
 
     dbPromiseInstance = openDB('vocab-db', 1, {
         upgrade(db) {
-            db.createObjectStore('words', { keyPath: 'word' });
+            const wordsStore = db.createObjectStore('words', { keyPath: 'word' });
+            wordsStore.createIndex('by_exception', 'exception');
             db.createObjectStore('processed', { keyPath: 'url' });
         }
     });
@@ -36,7 +37,7 @@ export async function addOrUpdateWord(wordEntry) {
             word: wordEntry.word,
             count: 1,
             first_source: wordEntry.source,
-            hidden: false
+            exception: false
         });
     }
     await tx.done;
@@ -55,23 +56,53 @@ export async function addOrUpdateWords(data) {
         const existingWord = await tx.store.get(word);
         if (existingWord) {
             existingWord.count++;
+            if(existingWord.first_source === '') existingWord.first_source = source;
             await tx.store.put(existingWord);
         } else {
             await tx.store.add({
                 word: word,
                 count: 1,
                 first_source: source,
-                hidden: false
+                exception: false
             });
         }
     }
+    await tx.done;
+}
 
+export async function addOrUpdateExceptions(exceptions) {
+    const db = await dbPromise();
+    const tx = db.transaction('words', 'readwrite');
+
+    for (const rawWord of exceptions) {
+        const word = rawWord;
+
+        if (!word || word.length <= 2) continue;
+
+        const existingWord = await tx.store.get(word);
+        if (existingWord) {
+            existingWord.exception = true;
+            await tx.store.put(existingWord);
+        } else {
+            await tx.store.add({
+                word: word,
+                count: 1,
+                first_source: '',
+                exception: true
+            });
+        }
+    }
     await tx.done;
 }
 
 export async function getAllWords() {
     const db = await dbPromise();
     return db.getAll('words');
+}
+
+export async function getAllExceptions() {
+    const db = await dbPromise();
+    return db.getAllFromIndex('words', 'by_exception', true);
 }
 
 export async function deleteWord(word) {

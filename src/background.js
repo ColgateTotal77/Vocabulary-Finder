@@ -1,4 +1,11 @@
-import {addOrUpdateWords, getAllWords, isAlreadyProcessed, markAsProcessed} from "./utils/storage";
+import {
+    addOrUpdateExceptions,
+    addOrUpdateWords,
+    getAllExceptions,
+    getAllWords,
+    isAlreadyProcessed,
+    markAsProcessed
+} from "./utils/storage";
 
 const browserAPI = (typeof browser === 'undefined') ? chrome : browser;
 
@@ -46,6 +53,20 @@ browserAPI.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         return false;
     }
 
+    else if (msg.type === 'addOrUpdateExceptions') {
+            (async () => {
+                try {
+                    console.log('[DB] Saving ', msg.data.exceptions);
+                    await addOrUpdateExceptions(msg.data.exceptions);
+                } catch (err) {
+                    console.error('[DB] failed to save', msg.data, err);
+                }
+                sendResponse({ success: true });
+            })();
+
+            return false;
+        }
+
     else if (msg.type === 'getAllWords') {
         (async () => {
             try {
@@ -55,6 +76,21 @@ browserAPI.runtime.onMessage.addListener((msg, sender, sendResponse) => {
             } catch (err) {
                 console.error('[DB] Failed to get words', err);
                 sendResponse({ words: [] });
+            }
+        })();
+
+        return true;
+    }
+
+    else if (msg.type === 'getAllExceptions') {
+        (async () => {
+            try {
+                const exceptions = await getAllExceptions();
+                console.log('[DB] Got exceptions', exceptions);
+                sendResponse({ exceptions });
+            } catch (err) {
+                console.error('[DB] Failed to get exceptions', err);
+                sendResponse({ exceptions: [] });
             }
         })();
 
