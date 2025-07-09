@@ -1,15 +1,23 @@
 import { wordParser } from './wordParser.js';
 
+let curLine = '';
+let prevLine = '';
 export function YoutubeSubsParser(callback) {
     const observer = new MutationObserver(function (mutations) {
         mutations.forEach(mutation => {
-            mutation.addedNodes.forEach(node => {
-                const text = node.textContent;
-                if (text) {
-                    const words = wordParser(text);
-                    console.log(text);
-                    callback(words);
+            mutation.addedNodes.forEach((node) => {
+                if (node.nodeType !== Node.TEXT_NODE) return;
+                const text = node.wholeText;
+                if (!text || prevLine === text || curLine === text) return;
+                if (!curLine || text.includes(curLine)) {
+                    curLine = text;
+                    return;
                 }
+
+                const words = wordParser(prevLine);
+                prevLine = curLine;
+                curLine = text;
+                callback(words);
             });
         });
     });

@@ -23,6 +23,7 @@ export default defineConfig({
         viteStaticCopy({
             targets: [
                 { src: 'public/manifest.json',          dest: '.'       },
+                { src: 'public/manifest_firefox.json',          dest: '.'       },
                 { src: 'public/icons/*',                dest: 'icons'  },
                 { src: 'src/popup/popup.html',          dest: 'popup'  },
                 { src: 'src/popup/popup.css',           dest: 'popup'  },

@@ -1,5 +1,4 @@
-import { addOrUpdateWord, getAllWords, isAlreadyProcessed, markAsProcessed } from "./utils/storage";
-// import { lemmatize } from "./utils/lemmatize";
+import {addOrUpdateWords, getAllWords, isAlreadyProcessed, markAsProcessed} from "./utils/storage";
 
 const browserAPI = (typeof browser === 'undefined') ? chrome : browser;
 
@@ -34,19 +33,12 @@ browserAPI.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     }
 
     else if (msg.type === 'addOrUpdateWords') {
-        const source = msg.data.source;
-
         (async () => {
-            for (const rawWord of msg.data.words) {
-                const word = rawWord;
-                if (word && word.length > 2) {
-                    try {
-                        await addOrUpdateWord({ word, source });
-                        console.log('[DB] saved', word);
-                    } catch (err) {
-                        console.error('[DB] failed to save', word, err);
-                    }
-                }
+            try {
+                console.log('[DB] Saving ', msg.data.words);
+                await addOrUpdateWords(msg.data);
+            } catch (err) {
+                console.error('[DB] failed to save', msg.data, err);
             }
             sendResponse({ success: true });
         })();
