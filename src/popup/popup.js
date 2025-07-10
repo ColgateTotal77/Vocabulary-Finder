@@ -126,14 +126,12 @@ async function fullRenderWords() {
         wordsHasMore = wordsResponse.hasMore;
         exceptionsHasMore = exceptionsResponse.hasMore;
 
-        renderWords(words || "words", wordListContainer, false,true);
-        renderWords(words || "words", addExceptionListContainer, true, true);
-        renderWords(exceptionsData || "exceptions", exceptionList, true, true);
+        renderWords(words, wordListContainer, false,true);
+        renderWords(words, addExceptionListContainer, true, true);
+        renderWords(exceptionsData, exceptionList, true, true);
     } catch (err) {
         console.error('Error loading words:', err);
     }
-
-
 }
 
 await fullRenderWords();

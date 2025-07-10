@@ -140,7 +140,7 @@ export async function getExceptionChunk(limit, lastKey) {
     }
 
     return {
-        words: results,
+        exceptions: results,
         nextKey: results.length > 0 ? results[results.length - 1].word : null,
         hasMore: cursor !== null
     };
