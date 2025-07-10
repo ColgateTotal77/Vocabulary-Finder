@@ -1,6 +1,6 @@
 import {
-    addOrUpdateExceptions,
-    addOrUpdateWords,
+    addWords,
+    addExceptions,
     getAllExceptions,
     getAllWords,
     isAlreadyProcessed,
@@ -26,45 +26,33 @@ browserAPI.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         return true;
     }
 
-    else if (msg.type === 'markAsProcessed') {
-        (async () => {
-            try {
-                await markAsProcessed(msg.data.url);
-            }
-            catch (err) {
-                console.error(err);
-            }
-        })();
-
-        return false;
-    }
-
-    else if (msg.type === 'addOrUpdateWords') {
+    else if (msg.type === 'addWords') {
         (async () => {
             try {
                 console.log('[DB] Saving ', msg.data.words);
-                await addOrUpdateWords(msg.data);
+                await addWords(msg.data);
+                await markAsProcessed(msg.data.source);
             } catch (err) {
                 console.error('[DB] failed to save', msg.data, err);
             }
-            sendResponse({ success: true });
         })();
 
         return false;
     }
 
-    else if (msg.type === 'addOrUpdateExceptions') {
+    else if (msg.type === 'addExceptions') {
             (async () => {
                 try {
                     console.log('[DB] Saving ', msg.data.exceptions);
-                    await addOrUpdateExceptions(msg.data.exceptions);
+                    await addExceptions(msg.data.exceptions);
+                    sendResponse({ processed: true });
                 } catch (err) {
                     console.error('[DB] failed to save', msg.data, err);
+                    sendResponse({ processed: false });
                 }
-                sendResponse({ success: true });
             })();
 
-            return false;
+            return true;
         }
 
     else if (msg.type === 'getAllWords') {

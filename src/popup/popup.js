@@ -1,3 +1,5 @@
+import { wordParser } from "./utils/wordParser";
+
 const browserAPI = (typeof browser === 'undefined') ? chrome : browser;
 
 let curState = 'word-list';
@@ -20,12 +22,18 @@ function sendMessageAsync(message) {
     });
 }
 
-function renderWords(words, list, showCheckboxes = false) {
+function renderWords(wordsArray, list, showCheckboxes = false) {
     list.innerHTML = '';
 
-    words.sort((a, b) => b.count - a.count);
+    if (!wordsArray || wordsArray.length === 0) list.innerHTML = '<div class="word-div">No words yet</div>';
+    else if (wordsArray === "words") list.innerHTML = '<div class="word-div">Failed to load words</div>'
+    else if (wordsArray === "exceptions") list.innerHTML = '<div class="word-div">Failed to load exceptions</div>'
 
-    for (const word of words) {
+    if(list.innerHTML !== '') return;
+
+    wordsArray.sort((a, b) => b.count - a.count);
+
+    for (const word of wordsArray) {
         const wordDiv = document.createElement('div');
         wordDiv.className = 'word-div';
 
@@ -33,7 +41,7 @@ function renderWords(words, list, showCheckboxes = false) {
         wordSpan.className = 'word';
         wordSpan.textContent = `${word.word} (${word.count})`;
 
-        const wordBlock = document.createElement('div');
+        const wordBlock = document.createElement('label');
         wordBlock.className = 'word-block';
         wordBlock.appendChild(wordSpan);
 
@@ -65,29 +73,35 @@ function renderWords(words, list, showCheckboxes = false) {
     }
 }
 
+let words = "words";
+let exceptions = "exceptions";
 const wordListContainer = document.getElementById('word-list-container');
-try {
-    const response = await sendMessageAsync({ type: 'getAllWords' });
-    const words = response.words;
+const addExceptionListContainer = document.getElementById('add-exception-list-container')
+const exceptionList = document.getElementById('exception-list')
 
-    if (!words || words.length === 0) wordListContainer.innerHTML = '<div class="word-div">No words yet</div>';
-    else renderWords(words, wordListContainer);
-} catch (err) {
-    console.error('Error loading words:', err);
-    wordListContainer.innerHTML = '<div>Failed to load words</div>';
+async function fullRenderWords() {
+    try {
+        words = (await sendMessageAsync({ type: 'getAllWords' })).words;
+        exceptions = (await sendMessageAsync({ type: 'getAllExceptions' })).exceptions;
+    } catch (err) {
+        console.error('Error loading words:', err);
+    }
+
+    renderWords(words, wordListContainer);
+    renderWords(words, addExceptionListContainer, true);
+    renderWords(exceptions, exceptionList, true);
 }
+
+await fullRenderWords();
 
 const moreBtn = document.getElementById('more');
 const dropdown = document.getElementById('dropdown-menu');
-
 const backBtn = document.getElementById('back');
-
 backBtn.addEventListener('click', () => {
     switchState('word-list');
     backBtn.classList.remove('active');
     tabName.textContent = "Saved words";
 })
-
 document.addEventListener('click', (e) => {
     if (moreBtn.contains(e.target)) {
         dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
@@ -99,44 +113,70 @@ document.addEventListener('click', (e) => {
 document.getElementById('add-exceptions').addEventListener('click', async () => {
     switchState('add-exception-list');
     backBtn.classList.add('active');
-    const addExceptionListContainer = document.getElementById('add-exception-list-container')
-    try {
-        const response = await sendMessageAsync({ type: 'getAllWords' });
-        const words = response.words;
-
-        if (!words || words.length === 0) addExceptionListContainer.innerHTML = '<div class="word-div">No words yet</div>';
-        else renderWords(words, addExceptionListContainer, true);
-    } catch (err) {
-        console.error('Error loading words:', err);
-        addExceptionListContainer.innerHTML = '<div>Failed to load words</div>';
-    }
-
     tabName.textContent = "Saved words";
 });
+document.getElementById('add-exception-btn').addEventListener('click', async () => {
+    const checkboxes = document.querySelectorAll('.word-checkbox:checked');
+    const exceptions = Array.from(checkboxes).map(cb => cb.value);
+    if(!exceptions) return;
+    // checkboxes.forEach(cb => {
+    //     const wordDiv = cb.closest('.word-div');
+    //     if (wordDiv) wordDiv.style.display = 'none';
+    // });
+
+    // browserAPI.runtime.sendMessage({
+    //     type: 'addExceptions',
+    //     data: {
+    //         exceptions: exceptions
+    //     }
+    // });
+
+    const response = await sendMessageAsync({
+        type: 'addExceptions',
+        data: {
+            exceptions: exceptions
+        }
+    });
+    if (response.processed) await fullRenderWords();
+})
 
 document.getElementById('add-exception-manually').addEventListener('click', () => {
     switchState('add-exception-manually-window');
     backBtn.classList.add('active');
     tabName.textContent = "Add exception manually";
 });
+document.getElementById('add-exception-manually-btn').addEventListener('click', async () => {
+    const text = document.getElementById('add-exception-manually-input').value;
+
+    // browserAPI.runtime.sendMessage({
+    //     type: 'addExceptions',
+    //     data: {
+    //         exceptions: wordParser(text)
+    //     }
+    // });
+
+    const response = await sendMessageAsync({
+        type: 'addExceptions',
+        data: {
+            exceptions: wordParser(text)
+        }
+    });
+    if (response.processed) await fullRenderWords();
+})
 
 document.getElementById('list-of-exceptions').addEventListener('click', async () => {
     switchState('exception-list');
     backBtn.classList.add('active');
-    const exceptionList = document.getElementById('exception-list')
-
-    try {
-        const response = await sendMessageAsync({ type: 'getAllExceptions' });
-        const words = response.exceptions;
-
-        if (!words || words.length === 0) exceptionList.innerHTML = '<div class="word-div">No exceptions yet</div>';
-        else renderWords(words, exceptionList, true);
-    } catch (err) {
-        console.error('Error loading words:', err);
-        exceptionList.innerHTML = '<div>Failed to load words</div>';
-    }
     tabName.textContent = "Exceptions";
 });
+// document.getElementById('delete-exceptions-btn').addEventListener('click', () => {
+//     const checkboxes = document.querySelectorAll('.word-checkbox:checked');
+//     const exceptions = Array.from(checkboxes).map(cb => cb.value);
+//     checkboxes.forEach(cb => {
+//         const wordDiv = cb.closest('.word-div');
+//         if (wordDiv) wordDiv.style.display = 'none';
+//     });
+// });
 
 document.getElementById('clear-words').addEventListener('click', () => {
     if (confirm("Are you sure you want to clear all words?")) {

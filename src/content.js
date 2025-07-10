@@ -5,7 +5,7 @@ const browserAPI = (typeof browser === "undefined") ? chrome : browser;
 
 function updateWordCounts(words) {
     browserAPI.runtime.sendMessage({
-        type: 'addOrUpdateWords',
+        type: 'addWords',
         data: {
             words: words,
             source: window.location.href
@@ -38,11 +38,7 @@ else {
         try {
             const response = await sendMessageAsync({type: 'isAlreadyProcessed', data: {url: window.location.href}});
             console.log(response);
-            if (!response.processed) {
-                sendMessageAsync({type: 'markAsProcessed', data: {url: window.location.href}})
-                    .catch(console.error);
-                parseWebsite(updateWordCounts);
-            }
+            if (!response.processed) parseWebsite(updateWordCounts);
         } catch (err) {
             console.error(err);
         }

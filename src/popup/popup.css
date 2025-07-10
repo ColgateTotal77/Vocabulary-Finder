@@ -2,7 +2,7 @@ body {
     font-family: Arial, sans-serif;
     padding: 10px;
     width: 300px;
-    height: 340px;
+    height: 350px;
     background: #f9f9f9;
     color: #333;
 }
@@ -85,6 +85,10 @@ body {
     padding-right: 6px;
 }
 
+/*.list::-webkit-scrollbar {*/
+/*    display: none;*/
+/*}*/
+
 ul {
     list-style: none;
     padding: 0;
@@ -108,11 +112,11 @@ ul {
 .word-block {
     display: flex;
     justify-content: space-between;
+    cursor: pointer;
 }
 
 .word-checkbox {
     transform: scale(1.2);
-    cursor: pointer;
 }
 
 .meta {
@@ -137,5 +141,10 @@ ul {
 }
 
 .state-view.active {
-    display: block;
+    display: flex;
+    flex-direction: column;
+}
+
+.btn {
+    margin: 10px 0 6px auto;
 }

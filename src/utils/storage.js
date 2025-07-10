@@ -8,7 +8,7 @@ export function dbPromise() {
     dbPromiseInstance = openDB('vocab-db', 1, {
         upgrade(db) {
             const wordsStore = db.createObjectStore('words', { keyPath: 'word' });
-            wordsStore.createIndex('by_exception', 'exception');
+            wordsStore.createIndex('by_exception_and_count', ['exception', 'count']);
             db.createObjectStore('processed', { keyPath: 'url' });
         }
     });
@@ -25,25 +25,7 @@ export async function markAsProcessed(url) {
     await db.put('processed', { url, processed: true, timestamp: Date.now() });
 }
 
-export async function addOrUpdateWord(wordEntry) {
-    const db = await dbPromise();
-    const tx = db.transaction('words', 'readwrite');
-    const existingWord = await tx.store.get(wordEntry.word);
-    if (existingWord) {
-        existingWord.count++;
-        await tx.store.put(existingWord);
-    } else {
-        await tx.store.add({
-            word: wordEntry.word,
-            count: 1,
-            first_source: wordEntry.source,
-            exception: false
-        });
-    }
-    await tx.done;
-}
-
-export async function addOrUpdateWords(data) {
+export async function addWords(data) {
     const db = await dbPromise();
     const tx = db.transaction('words', 'readwrite');
     const source = data.source;
@@ -63,14 +45,14 @@ export async function addOrUpdateWords(data) {
                 word: word,
                 count: 1,
                 first_source: source,
-                exception: false
+                exception: 0
             });
         }
     }
     await tx.done;
 }
 
-export async function addOrUpdateExceptions(exceptions) {
+export async function addExceptions(exceptions) {
     const db = await dbPromise();
     const tx = db.transaction('words', 'readwrite');
 
@@ -81,14 +63,14 @@ export async function addOrUpdateExceptions(exceptions) {
 
         const existingWord = await tx.store.get(word);
         if (existingWord) {
-            existingWord.exception = true;
+            existingWord.exception = 1;
             await tx.store.put(existingWord);
         } else {
             await tx.store.add({
                 word: word,
                 count: 1,
                 first_source: '',
-                exception: true
+                exception: 1
             });
         }
     }
@@ -97,15 +79,10 @@ export async function addOrUpdateExceptions(exceptions) {
 
 export async function getAllWords() {
     const db = await dbPromise();
-    return db.getAll('words');
+    return db.getAllFromIndex('words', 'by_exception', 0);
 }
 
 export async function getAllExceptions() {
     const db = await dbPromise();
-    return db.getAllFromIndex('words', 'by_exception', true);
-}
-
-export async function deleteWord(word) {
-    const db = await dbPromise();
-    await db.delete('words', word);
+    return db.getAllFromIndex('words', 'by_exception', 1);
 }
