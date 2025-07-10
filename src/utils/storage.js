@@ -77,12 +77,71 @@ export async function addExceptions(exceptions) {
     await tx.done;
 }
 
-export async function getAllWords() {
+export async function getWordsChunk(limit, lastKey) {
     const db = await dbPromise();
-    return db.getAllFromIndex('words', 'by_exception', 0);
+    const tx = db.transaction('words', 'readonly');
+    const index = tx.store.index('by_exception_and_count');
+
+    const range = IDBKeyRange.bound([0, 0], [0, Infinity]);
+    let cursor = await index.openCursor(range, 'prev');
+
+    let skipped = false;
+
+    if (lastKey && cursor) {
+        while (cursor && !skipped) {
+            if (cursor.primaryKey === lastKey) {
+                skipped = true;
+                cursor = await cursor.continue();
+                break;
+            }
+            cursor = await cursor.continue();
+        }
+    }
+
+    const results = [];
+    while (cursor && results.length < limit) {
+        results.push(cursor.value);
+        cursor = await cursor.continue();
+    }
+
+    return {
+        words: results,
+        nextKey: results.length > 0 ? results[results.length - 1].word : null,
+        hasMore: cursor !== null
+    };
 }
 
-export async function getAllExceptions() {
+
+export async function getExceptionChunk(limit, lastKey) {
     const db = await dbPromise();
-    return db.getAllFromIndex('words', 'by_exception', 1);
+    const tx = db.transaction('words', 'readonly');
+    const index = tx.store.index('by_exception_and_count');
+
+    const range = IDBKeyRange.bound([1, 0], [1, Infinity]);
+    let cursor = await index.openCursor(range, 'prev');
+
+    let skipped = false;
+
+    if (lastKey && cursor) {
+        while (cursor && !skipped) {
+            if (cursor.primaryKey === lastKey) {
+                skipped = true;
+                cursor = await cursor.continue();
+                break;
+            }
+            cursor = await cursor.continue();
+        }
+    }
+
+    const results = [];
+    while (cursor && results.length < limit) {
+        results.push(cursor.value);
+        cursor = await cursor.continue();
+    }
+
+    return {
+        words: results,
+        nextKey: results.length > 0 ? results[results.length - 1].word : null,
+        hasMore: cursor !== null
+    };
 }

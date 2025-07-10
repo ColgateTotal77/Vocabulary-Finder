@@ -1,8 +1,8 @@
 import {
+    getWordsChunk,
+    getExceptionChunk,
     addWords,
     addExceptions,
-    getAllExceptions,
-    getAllWords,
     isAlreadyProcessed,
     markAsProcessed
 } from "./utils/storage";
@@ -55,30 +55,30 @@ browserAPI.runtime.onMessage.addListener((msg, sender, sendResponse) => {
             return true;
         }
 
-    else if (msg.type === 'getAllWords') {
+    else if (msg.type === 'getWordsChunk') {
         (async () => {
             try {
-                const words = await getAllWords();
-                console.log('[DB] Got words', words);
-                sendResponse({ words });
+                const wordsData = await getWordsChunk(msg.data?.limit || 50, msg.data?.lastKey || null);
+                console.log('[DB] Got words', wordsData);
+                sendResponse(wordsData);
             } catch (err) {
                 console.error('[DB] Failed to get words', err);
-                sendResponse({ words: [] });
+                sendResponse({ exceptions: [], nextKey: null, hasMore: false });
             }
         })();
 
         return true;
     }
 
-    else if (msg.type === 'getAllExceptions') {
+    else if (msg.type === 'getExceptionChunk') {
         (async () => {
             try {
-                const exceptions = await getAllExceptions();
-                console.log('[DB] Got exceptions', exceptions);
-                sendResponse({ exceptions });
+                const exceptionsData = await getExceptionChunk(msg.data?.limit || 50, msg.data?.lastKey || null);
+                console.log('[DB] Got exceptions', exceptionsData);
+                sendResponse(exceptionsData);
             } catch (err) {
                 console.error('[DB] Failed to get exceptions', err);
-                sendResponse({ exceptions: [] });
+                sendResponse({ exceptions: [], nextKey: null, hasMore: false });
             }
         })();
 
