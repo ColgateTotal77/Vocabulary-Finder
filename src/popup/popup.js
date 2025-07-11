@@ -40,10 +40,10 @@ function scrollEventListener(list, isExceptionList = false, showCheckboxes = fal
                     renderWords(words, list, showCheckboxes);
                 }
                 else if (isExceptionList && exceptionsHasMore) {
-                    const { words, nextKey, hasMore} = (await sendMessageAsync({ type: 'getExceptionChunk', data: { lastKey: exceptionsNextKey } }));
+                    const { exceptions, nextKey, hasMore} = (await sendMessageAsync({ type: 'getExceptionChunk', data: { lastKey: exceptionsNextKey } }));
                     exceptionsNextKey = nextKey;
                     exceptionsHasMore = hasMore;
-                    renderWords(words, list, showCheckboxes);
+                    renderWords(exceptions, list, showCheckboxes);
                 }
 
             } catch (err) {

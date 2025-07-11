@@ -81,7 +81,7 @@ browserAPI.runtime.onMessage.addListener((msg, sender, sendResponse) => {
                 sendResponse(wordsData);
             } catch (err) {
                 console.error('[DB] Failed to get words', err);
-                sendResponse({ exceptions: [], nextKey: null, hasMore: false });
+                sendResponse({ words: [], nextKey: null, hasMore: false });
             }
         })();
 
