@@ -1,5 +1,5 @@
 import { openDB } from 'idb';
-// import { lemmatize } from "./utils/lemmatize";
+import { lemmatize } from "./lemmatize";
 
 let dbPromiseInstance = null;
 export function dbPromise() {
@@ -31,7 +31,7 @@ export async function addWords(data) {
     const source = data.source;
 
     for (const rawWord of data.words) {
-        const word = rawWord;
+        const word = lemmatize(rawWord);
 
         if (!word || word.length <= 2) continue;
 
@@ -57,7 +57,7 @@ export async function addExceptions(exceptions) {
     const tx = db.transaction('words', 'readwrite');
 
     for (const rawWord of exceptions) {
-        const word = rawWord;
+        const word = lemmatize(rawWord);
 
         if (!word || word.length <= 2) continue;
 

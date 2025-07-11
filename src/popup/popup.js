@@ -97,16 +97,16 @@ function renderWords(wordsArray, list, showCheckboxes = false, rerender = false)
         wordSpan.textContent = `${word.word} (${word.count})`;
 
         const wordBlock = document.createElement('label');
-        wordBlock.className = 'word-block';
-        wordBlock.appendChild(wordSpan);
-
         if (showCheckboxes) {
             const checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
             checkbox.className = 'word-checkbox';
             checkbox.value = word.word;
+
+            wordBlock.className = 'word-block';
             wordBlock.appendChild(checkbox);
         }
+        wordBlock.appendChild(wordSpan);
 
         const meta = document.createElement('div');
         meta.className = 'meta';
