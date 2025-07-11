@@ -6,6 +6,15 @@
     <link rel="stylesheet" href="popup.css">
 </head>
 <body>
+    <div id="confirm-modal" class="modal hidden">
+        <div class="modal-content">
+            <p>Are you sure you want to clear all words?</p>
+            <div class="modal-buttons">
+                <button id="confirm-yes">Yes</button>
+                <button id="confirm-no">No</button>
+            </div>
+        </div>
+    </div>
     <div id="header">
         <div style="display: flex; flex-direction: row;">
             <button class="state-view" id="back" aria-label="Back">
@@ -62,6 +71,15 @@
     </div>
 
     <div class="state-view" id="export-words-window">
+        <label>
+            Max number of counts:
+            <input type="number" id="export-words-max-count">
+        </label>
+        <label>
+            Min number of counts:
+            <input type="number" id="export-words-min-count">
+        </label>
+        <button class="btn" id="export-words-btn">Export txt</button>
     </div>
 
 <script type="module" src="popup.js"></script>

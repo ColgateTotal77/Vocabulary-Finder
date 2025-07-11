@@ -3,8 +3,11 @@ import {
     getExceptionChunk,
     addWords,
     addExceptions,
+    deleteExceptions,
     isAlreadyProcessed,
-    markAsProcessed
+    markAsProcessed,
+    clearDB,
+    getExportWords
 } from "./utils/storage";
 
 const browserAPI = (typeof browser === 'undefined') ? chrome : browser;
@@ -41,19 +44,34 @@ browserAPI.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     }
 
     else if (msg.type === 'addExceptions') {
-            (async () => {
-                try {
-                    console.log('[DB] Saving ', msg.data.exceptions);
-                    await addExceptions(msg.data.exceptions);
-                    sendResponse({ processed: true });
-                } catch (err) {
-                    console.error('[DB] failed to save', msg.data, err);
-                    sendResponse({ processed: false });
-                }
-            })();
+        (async () => {
+            try {
+                console.log('[DB] Saving ', msg.data.exceptions);
+                await addExceptions(msg.data.exceptions);
+                sendResponse({ processed: true });
+            } catch (err) {
+                console.error('[DB] failed to save', msg.data, err);
+                sendResponse({ processed: false });
+            }
+        })();
 
-            return true;
-        }
+        return true;
+    }
+
+    else if (msg.type === 'deleteExceptions') {
+        (async () => {
+            try {
+                console.log('[DB] Deleting ', msg.data.exceptions);
+                await deleteExceptions(msg.data.exceptions);
+                sendResponse({ processed: true });
+            } catch (err) {
+                console.error('[DB] failed to save', msg.data, err);
+                sendResponse({ processed: false });
+            }
+        })();
+
+        return true;
+    }
 
     else if (msg.type === 'getWordsChunk') {
         (async () => {
@@ -84,4 +102,33 @@ browserAPI.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 
         return true;
     }
+
+    else if (msg.type === 'clearDB') {
+        (async () => {
+            try {
+                await clearDB();
+                sendResponse({ processed: true });
+            } catch (err) {
+                console.error('[DB] Failed to clear DB', err);
+                sendResponse({ processed: false });
+            }
+        })();
+
+        return true;
+    }
+
+    else if (msg.type === 'getExportWords') {
+        (async () => {
+            try {
+                const wordsData = await getExportWords(msg.data?.minCount, msg.data?.maxCount);
+                console.log('[DB] Got export words', wordsData);
+                sendResponse(wordsData);
+            } catch (err) {
+                console.error('[DB] Failed to get words', err);
+                sendResponse({ exceptions: [], nextKey: null, hasMore: false });
+            }
+        })();
+        return true;
+    }
+
 });

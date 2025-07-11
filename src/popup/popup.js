@@ -23,7 +23,7 @@ function sendMessageAsync(message) {
 }
 
 let isLoading = false;
-function scrollEventListener(list, isExceptionList) {
+function scrollEventListener(list, isExceptionList = false, showCheckboxes = false) {
     list.addEventListener('scroll', async () => {
         const scrollTop = list.scrollTop;
         const scrollHeight = list.scrollHeight;
@@ -33,18 +33,19 @@ function scrollEventListener(list, isExceptionList) {
 
             isLoading = true;
             try {
-                if (isExceptionList && exceptionsHasMore) {
-                    const { words, nextKey, hasMore} = (await sendMessageAsync({ type: 'getExceptionChunk', data: { lastKey: exceptionsNextKey } }));
-                    exceptionsNextKey = nextKey;
-                    exceptionsHasMore = hasMore;
-                    renderWords(words, list, true);
-                }
-                else if (wordsHasMore) {
+                if (!isExceptionList && wordsHasMore) {
                     const { words, nextKey, hasMore} = (await sendMessageAsync({ type: 'getWordsChunk', data: { lastKey: wordsNextKey } }));
                     wordsNextKey = nextKey;
                     wordsHasMore = hasMore;
-                    renderWords(words, list, false);
+                    renderWords(words, list, showCheckboxes);
                 }
+                else if (isExceptionList && exceptionsHasMore) {
+                    const { words, nextKey, hasMore} = (await sendMessageAsync({ type: 'getExceptionChunk', data: { lastKey: exceptionsNextKey } }));
+                    exceptionsNextKey = nextKey;
+                    exceptionsHasMore = hasMore;
+                    renderWords(words, list, showCheckboxes);
+                }
+
             } catch (err) {
                 console.error('Error loading words:', err);
             } finally {
@@ -52,6 +53,32 @@ function scrollEventListener(list, isExceptionList) {
             }
         }
     });
+}
+
+function showConfirmModal(onConfirm) {
+    const modal = document.getElementById('confirm-modal');
+    modal.classList.remove('hidden');
+
+    const yesBtn = document.getElementById('confirm-yes');
+    const noBtn = document.getElementById('confirm-no');
+
+    function closeModal() {
+        modal.classList.add('hidden');
+        yesBtn.removeEventListener('click', handleYes);
+        noBtn.removeEventListener('click', handleNo);
+    }
+
+    function handleYes() {
+        closeModal();
+        onConfirm();
+    }
+
+    function handleNo() {
+        closeModal();
+    }
+
+    yesBtn.addEventListener('click', handleYes);
+    noBtn.addEventListener('click', handleNo);
 }
 
 function renderWords(wordsArray, list, showCheckboxes = false, rerender = false) {
@@ -103,10 +130,10 @@ function renderWords(wordsArray, list, showCheckboxes = false, rerender = false)
 
 const wordListContainer = document.getElementById('word-list-container');
 const addExceptionListContainer = document.getElementById('add-exception-list-container')
-const exceptionList = document.getElementById('exception-list')
-scrollEventListener(wordListContainer, false);
-scrollEventListener(addExceptionListContainer, true);
-scrollEventListener(exceptionList, true);
+const exceptionListContainer = document.getElementById('exception-list-container')
+scrollEventListener(wordListContainer);
+scrollEventListener(addExceptionListContainer, false, true);
+scrollEventListener(exceptionListContainer, true, true);
 
 let wordsNextKey = null;
 let exceptionsNextKey = null;
@@ -128,7 +155,7 @@ async function fullRenderWords() {
 
         renderWords(words, wordListContainer, false,true);
         renderWords(words, addExceptionListContainer, true, true);
-        renderWords(exceptionsData, exceptionList, true, true);
+        renderWords(exceptionsData, exceptionListContainer, true, true);
     } catch (err) {
         console.error('Error loading words:', err);
     }
@@ -136,13 +163,19 @@ async function fullRenderWords() {
 
 await fullRenderWords();
 
+let needToRender = false;
+
 const moreBtn = document.getElementById('more');
 const dropdown = document.getElementById('dropdown-menu');
 const backBtn = document.getElementById('back');
-backBtn.addEventListener('click', () => {
+backBtn.addEventListener('click', async () => {
     switchState('word-list');
     backBtn.classList.remove('active');
     tabName.textContent = "Saved words";
+    if(needToRender) {
+        await fullRenderWords();
+        needToRender = false;
+    }
 })
 document.addEventListener('click', (e) => {
     if (moreBtn.contains(e.target)) {
@@ -156,19 +189,24 @@ document.getElementById('add-exceptions').addEventListener('click', async () => 
     switchState('add-exception-list');
     backBtn.classList.add('active');
     tabName.textContent = "Saved words";
+
+    if(needToRender) {
+        await fullRenderWords();
+        needToRender = false;
+    }
 });
 document.getElementById('add-exception-btn').addEventListener('click', async () => {
     const checkboxes = document.querySelectorAll('.word-checkbox:checked');
     const exceptions = Array.from(checkboxes).map(cb => cb.value);
     if (!exceptions || exceptions.length === 0) return;
-
+    checkboxes.forEach(cb => cb.closest('.word-div').style.display = 'none' );
     const response = await sendMessageAsync({
         type: 'addExceptions',
         data: {
             exceptions: exceptions
         }
     });
-    if (response.processed) await fullRenderWords();
+    if (response.processed) needToRender = true;
 });
 
 document.getElementById('add-exception-manually').addEventListener('click', () => {
@@ -177,7 +215,8 @@ document.getElementById('add-exception-manually').addEventListener('click', () =
     tabName.textContent = "Add exception manually";
 });
 document.getElementById('add-exception-manually-btn').addEventListener('click', async () => {
-    const text = document.getElementById('add-exception-manually-input').value;
+    const addExceptionManuallyInput = document.getElementById('add-exception-manually-input');
+    const text = addExceptionManuallyInput.value;
 
     const response = await sendMessageAsync({
         type: 'addExceptions',
@@ -185,26 +224,38 @@ document.getElementById('add-exception-manually-btn').addEventListener('click', 
             exceptions: wordParser(text)
         }
     });
-    if (response.processed) await fullRenderWords();
+    addExceptionManuallyInput.value = '';
+    if (response.processed) needToRender = true;
 })
 
 document.getElementById('list-of-exceptions').addEventListener('click', async () => {
     switchState('exception-list');
     backBtn.classList.add('active');
     tabName.textContent = "Exceptions";
-});
-// document.getElementById('delete-exceptions-btn').addEventListener('click', () => {
-//     const checkboxes = document.querySelectorAll('.word-checkbox:checked');
-//     const exceptions = Array.from(checkboxes).map(cb => cb.value);
-//     checkboxes.forEach(cb => {
-//         const wordDiv = cb.closest('.word-div');
-//         if (wordDiv) wordDiv.style.display = 'none';
-//     });
-// });
 
-document.getElementById('clear-words').addEventListener('click', () => {
-    if (confirm("Are you sure you want to clear all words?")) {
+    if(needToRender) {
+        await fullRenderWords();
+        needToRender = false;
     }
+});
+document.getElementById('delete-exceptions-btn').addEventListener('click', async () => {
+    const checkboxes = document.querySelectorAll('.word-checkbox:checked');
+    const exceptions = Array.from(checkboxes).map(cb => cb.value);
+    checkboxes.forEach(cb => cb.closest('.word-div').style.display = 'none' );
+    const response = await sendMessageAsync({
+        type: 'deleteExceptions',
+        data: {
+            exceptions: exceptions
+        }
+    });
+    if (response.processed) needToRender = true;
+});
+
+document.getElementById('clear-words').addEventListener('click', async () => {
+    showConfirmModal(async () => {
+        const response = await sendMessageAsync({ type: 'clearDB' });
+        if(response.processed) await fullRenderWords();
+    });
 });
 
 document.getElementById('export-words').addEventListener('click', () => {
@@ -212,3 +263,40 @@ document.getElementById('export-words').addEventListener('click', () => {
     backBtn.classList.add('active');
     tabName.textContent = "Export";
 });
+
+document.getElementById('export-words-btn').addEventListener('click', async () => {
+    const minCount = parseInt(document.getElementById('export-words-min-count').value, 10) || 0;
+    const maxCount = parseInt(document.getElementById('export-words-max-count').value, 10) || Infinity;
+
+    const response = await sendMessageAsync({
+        type: 'getExportWords',
+        data: {
+            minCount: minCount,
+            maxCount: maxCount,
+        }
+    });
+    const words = response.words;
+
+    if (!words || words.length === 0) {
+        alert('No words found in the specified range.');
+        return;
+    }
+
+    const wordsText = words.map(w => `${w.word} (${w.count})`).join('\n');
+
+    const blob = new Blob([wordsText], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = url;
+    const now = new Date().toISOString();
+    a.download = `exported_words_${now}.txt`;
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+
+    setTimeout(() => {
+        URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+    }, 1000);
+})

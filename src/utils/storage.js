@@ -77,6 +77,20 @@ export async function addExceptions(exceptions) {
     await tx.done;
 }
 
+export async function deleteExceptions(exceptions) {
+    const db = await dbPromise();
+    const tx = db.transaction('words', 'readwrite');
+
+    for (const word of exceptions) {
+        const existingWord = await tx.store.get(word);
+        if (existingWord) {
+            existingWord.exception = 0;
+            await tx.store.put(existingWord);
+        }
+    }
+    await tx.done;
+}
+
 export async function getWordsChunk(limit, lastKey) {
     const db = await dbPromise();
     const tx = db.transaction('words', 'readonly');
@@ -111,7 +125,6 @@ export async function getWordsChunk(limit, lastKey) {
     };
 }
 
-
 export async function getExceptionChunk(limit, lastKey) {
     const db = await dbPromise();
     const tx = db.transaction('words', 'readonly');
@@ -143,5 +156,41 @@ export async function getExceptionChunk(limit, lastKey) {
         exceptions: results,
         nextKey: results.length > 0 ? results[results.length - 1].word : null,
         hasMore: cursor !== null
+    };
+}
+
+export async function clearDB() {
+    const db = await dbPromise();
+    const tx = db.transaction(['words', 'processed'], 'readwrite');
+    await tx.objectStore('words').clear();
+    await tx.objectStore('processed').clear();
+    await tx.done;
+}
+
+export async function getExportWords(minCount, maxCount, withException = false) {
+    const db = await dbPromise();
+    const tx = db.transaction('words', 'readonly');
+    const index = tx.store.index('by_exception_and_count');
+
+    const result = [];
+
+    const range0 = IDBKeyRange.bound([0, minCount], [0, maxCount]);
+    let cursor = await index.openCursor(range0, 'prev');
+    while (cursor) {
+        result.push(cursor.value);
+        cursor = await cursor.continue();
+    }
+
+    if(withException) {
+        const range1 = IDBKeyRange.bound([1, minCount], [1, maxCount]);
+        let cursor = await index.openCursor(range1, 'prev');
+        while (cursor) {
+            result.push(cursor.value);
+            cursor = await cursor.continue();
+        }
+    }
+
+    return {
+        words: result
     };
 }
